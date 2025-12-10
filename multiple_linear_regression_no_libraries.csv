@@ -1,0 +1,108 @@
+code
+# Multiple Linear Regression WITHOUT any ML libraries
+# Uses Normal Equation: (X^T X) * beta = X^T y
+""
+# Step 1: Take input from user
+n = int(input('Enter number of data points (rows): '))
+f = int(input('Enter number of features (columns): '))
+""
+print('\nEnter feature values row by row (space separated):')
+X = []  # feature matrix with intercept
+y = []  # target values
+""
+for i in range(n):
+"    row = list(map(float, input(f'Row {i+1} - enter {f} feature values: ').split()))"
+    if len(row) != f:
+"        print('Error: You must enter exactly', f, 'values.')"
+        exit()
+    X.append([1.0] + row)  # add intercept term 1.0 at the beginning
+    y_val = float(input(f'Row {i+1} - enter target y value: '))
+    y.append(y_val)
+""
+p = f + 1  # number of parameters (intercept + features)
+""
+# Step 2: Helper functions for matrix operations
+def transpose(matrix):
+    return [list(row) for row in zip(*matrix)]
+""
+"def mat_mul(A, B):"
+"    # A: m x n, B: n x k -> C: m x k"
+    m = len(A)
+    n = len(A[0])
+    k = len(B[0])
+    C = [[0.0 for _ in range(k)] for _ in range(m)]
+    for i in range(m):
+        for j in range(k):
+            s = 0.0
+            for t in range(n):
+                s += A[i][t] * B[t][j]
+            C[i][j] = s
+    return C
+""
+"def mat_vec_mul(A, v):"
+"    # A: m x n, v: n -> result: m"
+    m = len(A)
+    n = len(A[0])
+    result = [0.0 for _ in range(m)]
+    for i in range(m):
+        s = 0.0
+        for j in range(n):
+            s += A[i][j] * v[j]
+        result[i] = s
+    return result
+""
+"def solve_linear_system(A, b):"
+    # Solve A * x = b using Gaussian elimination (no pivoting)
+    n = len(A)
+    # Create augmented matrix
+    aug = [A[i] + [b[i]] for i in range(n)]
+""
+    # Forward elimination
+    for i in range(n):
+        if abs(aug[i][i]) < 1e-12:
+            print('Error: Matrix is singular or nearly singular.')
+            exit()
+"        for j in range(i+1, n):"
+            factor = aug[j][i] / aug[i][i]
+"            for k in range(i, n+1):"
+                aug[j][k] -= factor * aug[i][k]
+""
+    # Back substitution
+    x = [0.0 for _ in range(n)]
+"    for i in range(n-1, -1, -1):"
+        s = aug[i][n]
+"        for j in range(i+1, n):"
+            s -= aug[i][j] * x[j]
+        x[i] = s / aug[i][i]
+    return x
+""
+# Step 3: Build normal equation components
+Xt = transpose(X)              # (p x n)
+"XtX = mat_mul(Xt, X)           # (p x p)"
+"Xty = mat_vec_mul(Xt, y)       # (p)"
+""
+# Step 4: Solve for coefficients beta
+"beta = solve_linear_system(XtX, Xty)"
+""
+print('\nRegression Coefficients (beta):')
+"print('Intercept (beta0):', beta[0])"
+"for i in range(1, p):"
+"    print(f'Coefficient for feature {i} (beta{i}):', beta[i])"
+""
+# Step 5: Prediction function
+def predict(x_features):
+    # x_features: list of feature values (length = f)
+    if len(x_features) != f:
+"        print('Error: Expected', f, 'features.')"
+        return None
+    x_full = [1.0] + x_features
+    y_pred = 0.0
+    for j in range(p):
+        y_pred += beta[j] * x_full[j]
+    return y_pred
+""
+print('\n--- Prediction ---')
+"test_features = list(map(float, input(f'Enter {f} feature values for prediction (space separated): ').split()))"
+y_hat = predict(test_features)
+if y_hat is not None:
+"    print('Predicted y =', y_hat)"
